@@ -1,0 +1,251 @@
+<html>
+<head>
+<title>PicWic Filters</title>
+
+<style>
+.Hcenter{position:absolute;left:50%;transform:translate(-50%,0px);}
+body{background-color:#E0E0E0;overflow:hidden;font-size:20px;font-family:Arial;-webkit-touch-callout: none;-webkit-user-select: none;-khtml-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;}
+#mainContainer{background-color:#795548;box-shadow: 0px 0px 10px #4E342E;position:absolute;width:100%;top:0px;max-Width:800px;margin:auto;height:100%;}
+#navContainer{background-color:#3E2723;position:absolute;Z-index:999;max-Width:800px;color:#FFF;width:100%;height:50px;top:100%;left:50%;transform:translate(-50%,-50px);}
+.button{box-shadow: 0px 0px 1px #4E342E;background-color:#6D4C41;display: flex;justify-content: center;align-items: center;height:50px;width:100px;text-align:center;transition:1s;}
+.button:hover{box-shadow: 0px 0px 10px #4E342E;background-color:#8D6E63;color:#3E2723;}
+#filtersButton{position:absolute;left:0px;}
+#selectImage{background-color:#FBC02D;color:#000;position:absolute;border-radius:50px;width:100px;height:100px;top:-30px;}
+#selectImage:hover{background-color:#AD1457;color:#FFF;}
+#DownloadImage{position:absolute;left:100%;transform:translate(-100%,0px);}
+#filterSelector{background-color:#795548;box-shadow: 0px 0px 10px #4E342E;overflow-y:auto;overflow-x:hidden;visibility:hidden;position:fixed;top:10px;height:100%;width:90%;}
+table{padding:10px 0px 100px 0px;}
+td{vertical-align:bottom;width:100px;height:100px;text-align:center;color:FFF;text-shadow:1px 1px 3px #000;box-shadow: 0px 0px 10px #4E342E;}
+.hidden{visibility:hidden;position:absolute;}
+
+#underc{position:absolute;top:10px;max-width:80%;max-height:80%;padding:5px;background-color:#FFF;}
+#selectImagepls{position:absolute;top:40%;font-size:20px;text-align:center;color:#FFF;}
+#working{position:fixed;top:50%;left:0;width:100%;Z-index:999;text-align:center;font-size:20px;box-shadow: 0px 0px 10px #4E342E;color:#FFF;Background-color:#3E2723;visibility:hidden;}
+
+#oldlove{background:url("filtericons/oldlove.png");}
+#rose{background:url("filtericons/rose.png");}
+#skin{background:url("filtericons/skin.png");}
+#retro{background:url("filtericons/retro.png");}
+#movies{background:url("filtericons/movies.png");}
+#vibrant{background:url("filtericons/vibrant.png");}
+
+#cake{background:url("filtericons/cake.png");}
+#blue{background:url("filtericons/blue.png");}
+#moss{background:url("filtericons/moss.png");}
+
+#retro2{background:url("filtericons/retro2.png");}
+#rainforest{background:url("filtericons/rainforest.png");}
+#sunlight{background:url("filtericons/sunlight.png");}
+
+#retro3{background:url("filtericons/retro3.png");}
+#coffee{background:url("filtericons/coffee.png");}
+#gray{background:url("filtericons/gray.png");}
+
+#output{visibility:hidden;overflow:auto;max-width:100%;max-height:100%;}
+#image2download{max-width:100%;}
+input{display:none;}
+</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+</head>
+
+<script src="context_blender.js"></script>
+<script>
+function showFilters(){
+var filterSelecter=document.getElementById("filterSelector");
+var filtersButton=document.getElementById("filtersButton");
+if(filterSelecter.style.visibility=="hidden"||filterSelecter.style.visibility=="")
+{filterSelecter.style.visibility="visible";
+filtersButton.innerHTML="Back"}
+else
+{
+filterSelecter.style.visibility="hidden";
+filtersButton.innerHTML="Filters";
+}
+}
+
+
+function handleFiles(files) {
+  var file = files[0];
+  var reader = new FileReader();
+    reader.onload = (function(aImg) { return function(e) { aImg.src = e.target.result;selected=1;init(); }; })(Image1);
+    reader.readAsDataURL(file);
+}
+
+function filterMake(ctx,colorstops,colors)
+{
+that={};
+that.ctx=ctx;
+gradient=ctx.createRadialGradient(0,0,0,0,0,Image1.height);
+len=colorstops.length;
+for(var i=0;i<len;i++)
+{
+gradient.addColorStop(colorstops[i]/len,colors[i]);
+}
+that.gradient=gradient;
+that.apply=function(x,y,w,h){
+	that.ctx.fillStyle=that.gradient;
+	that.ctx.fillRect(x,y,w,h);
+}
+return that;
+}
+
+function apply_filter(i){
+if(selected){
+selecter=i;
+init();
+isWorking(1);
+
+setTimeout(function(){
+if(selecter!=-1)
+{over.blendOnto(under,_filters[selecter].blend);}
+isWorking(0);	
+			},100);
+}
+else{alert("Please select An Image First");}
+showFilters();
+}
+
+function downloads()
+{
+if(selected){
+isWorking(1);
+setTimeout(function(){
+var dataURL = uc.toDataURL('image/png');
+
+document.getElementById("image2download").src=dataURL;
+document.getElementById("output").style.visibility="visible";
+
+document.getElementById("mainContainer").style.visibility="hidden";
+
+  var link = document.createElement("a");
+  link.download = "download.png";
+  link.href = dataURL;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  delete link;
+isWorking(0);},100);
+  //window.open(dataURL);
+  //var myWindow = window.open("", "MsgWindow");
+  //myWindow.document.write("<img src='"+dataURL+"'><br>save this ");
+}
+else{alert("Please select An Image First");}
+}
+
+
+function isWorking(i){
+var message=document.getElementById("working");
+if(i==1)
+{message.style.visibility="visible";}
+else if(i==0)
+{message.style.visibility="hidden";}
+}
+
+var oc,uc,over,under;
+var selecter=0;
+var selected=0;
+var Image1=new Image();
+_filters=[
+	      {stops:[0],colors:["#AD1457"],blend:"lighten"},
+	      {stops:[0],colors:["#AD1457"],blend:"softlight"},
+	      {stops:[0,1],colors:["#E53935","#C62828"],blend:"hue"},
+	      {stops:[0],colors:["#B71C1C"],blend:"lighten"},
+	      {stops:[0],colors:["#4A148C"],blend:"lighten"},
+	      {stops:[0],colors:["#8E24AA"],blend:"overlay"},
+	      {stops:[0,1],colors:["#BA68C8","#F06292"],blend:"softlight"},
+	      {stops:[0,1],colors:["#1976D2","#0D47A1"],blend:"overlay"},
+	      {stops:[0],colors:["#004D40"],blend:"overlay"},
+	      {stops:[0],colors:["#004D40"],blend:"lighten"},
+	      {stops:[0],colors:["#33691E"],blend:"overlay"},
+	      {stops:[0],colors:["#FFCA28"],blend:"softlight"},
+	      {stops:[0],colors:["#833"],blend:"lighten"},
+	      {stops:[0],colors:["#37474F"],blend:"lighten"},
+	      {stops:[0],colors:["#000000"],blend:"color"},	      
+		];
+
+
+function init(){
+oc= document.getElementById("overc");
+uc= document.getElementById("underc");
+selectImage=document.getElementById("selectImagepls");
+over = oc.getContext('2d');
+under = uc.getContext('2d');
+
+uc.width=Image1.width;
+uc.height=Image1.height;
+oc.width=Image1.width;
+oc.height=Image1.height;
+
+if(selected==0)
+{selectImage.style.visibility="visible";}
+
+if(selecter!=-1&&selected==1)
+{
+selectImage.style.visibility="hidden";
+var filterobj=filterMake(over,_filters[selecter].stops,_filters[selecter].colors);
+filterobj.apply(0,0,uc.width,uc.height);
+}
+under.drawImage(Image1,0,0);
+
+}
+
+</script>
+
+<body onload="init();">
+<div id="output">if your download didnt start,long press to save.Reload page to edit another image<img id="image2download" ></div>
+
+<div id="mainContainer" class="Hcenter">
+<div id="working">
+Working..<br>
+Please Wait.
+</div>
+<div id="hiddenelements" class="hidden">
+<input type="file" id="inputf" accept="image/*" onchange="handleFiles(this.files)">
+</div>
+<div id="canvasContainer">
+
+<canvas class="hidden" id="overc" ></canvas>
+<canvas class="Hcenter" id="underc" ></canvas>
+
+</div>
+<div id="selectImagepls" class="Hcenter">Please Select An Image</div>
+<div id="filterSelector" class="Hcenter">
+<table class="Hcenter">
+<tr>
+<td id="rose" onclick="apply_filter(1);">Rose</td>
+<td id="skin" onclick="apply_filter(2);">skin</td>
+<td id="oldlove" onclick="apply_filter(0);">Old Love</td>
+</tr>
+<tr>
+<td id="retro" onclick="apply_filter(3);">Retro</td>
+<td id="movies" onclick="apply_filter(4);">Movies</td>
+<td id="vibrant" onclick="apply_filter(5);">Vibrant</td>
+</tr>
+<tr>
+<td id="blue" onclick="apply_filter(7);">Blue</td>
+<td id="moss" onclick="apply_filter(8);">Moss</td>
+<td id="cake" onclick="apply_filter(6);">Cake</td>
+</tr>
+<tr>
+<td id="retro2" onclick="apply_filter(9);">Retro2</td>
+<td id="rainforest" onclick="apply_filter(10);">Rainforest</td>
+<td id="sunlight" onclick="apply_filter(11);">Sunlight</td>
+</tr>
+<tr>
+<td id="retro3" onclick="apply_filter(12);">Retro3</td>
+<td id="coffee" onclick="apply_filter(13);">coffee</td>
+<td id="gray" onclick="apply_filter(14);">gray</td>
+</tr>
+</table>
+</div>
+
+
+
+<div id="navContainer" >
+<div id="filtersButton" class="button"  onclick="showFilters();" ><span>Filters</span></div>
+<div id="selectImage" onclick="document.getElementById('inputf').click();" class="button Hcenter"><span>Image</span></div>
+<div id="DownloadImage" onclick="downloads();" class="button"><span>Download</span></div>
+</div>
+</div>
+</body>
+</html>

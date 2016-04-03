@@ -1,0 +1,313 @@
+<html>
+<head>
+<title>PicWic Filters</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+<script src="context_blender.js"></script>
+<style>
+
+.Hcenter{position:absolute;left:50%;transform:translate(-50%,0px);}
+.button{
+position:absolute;
+display:flex;
+justify-content:center; 
+align-items:center;
+height:50px;
+width:100px;
+text-align:center;
+box-shadow:0px 0px 1px #4E342E;
+background-color:#6D4C41;
+transition:1s;
+}
+.button:hover{
+box-shadow:0px 0px 10px #4E342E;
+background-color:#8D6E63;
+color:#3E2723;
+}
+
+body{
+background-color:#E0E0E0;
+overflow:hidden;
+font-size:20px;
+font-family:Arial;
+-webkit-touch-callout: none;
+-webkit-user-select: none;
+-khtml-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+}
+#mainContainer{
+background-color:#795548;
+box-shadow: 0px 0px 10px #4E342E;
+position:absolute;
+top:0px;
+width:100%;
+height:100%;
+max-Width:800px;
+}
+
+#navContainer{
+color:#FFF;
+background-color:#3E2723;
+
+position:absolute;
+Z-index:999;
+top:100%;
+left:50%;
+transform:translate(-50%,-100%);
+width:100%;
+height:50px;
+max-Width:inherit;
+}
+
+#filtersButton{left:0px;}
+#selectImage{background-color:#FBC02D;color:#000;border-radius:50px;width:100px;height:100px;top:-30px;}
+#selectImage:hover{background-color:#AD1457;color:#FFF;}
+#DownloadImage{left:100%;transform:translate(-100%,0px);}
+
+#filterSelector{
+background-color:#795548;
+box-shadow: 0px 0px 10px #4E342E;
+overflow-y:auto;
+overflow-x:hidden;
+visibility:hidden;
+position:fixed;
+top:10px;
+height:100%;
+width:90%;}
+table{padding:10px 0px 100px 0px;}
+td{
+vertical-align:bottom;
+width:100px;
+height:100px;
+text-align:center;
+color:FFF;
+text-shadow:1px 1px 3px #000;
+box-shadow: 0px 0px 10px #4E342E;
+}
+
+
+.hidden{visibility:hidden;position:absolute;}
+#underc{position:absolute;top:10px;max-width:80%;max-height:80%;padding:5px;background-color:#FFF;}
+#selectImagepls{position:absolute;top:40%;font-size:20px;text-align:center;color:#FFF;}
+#working{position:fixed;top:50%;left:0;width:100%;Z-index:999;text-align:center;font-size:20px;box-shadow: 0px 0px 10px #4E342E;color:#FFF;Background-color:#3E2723;visibility:hidden;}
+
+
+#output{visibility:hidden;overflow:auto;max-width:100%;max-height:100%;}
+#image2download{max-width:100%;}
+input{display:none;}
+</style>
+
+<script>
+
+//UI functions
+
+/* toggle show/hide of the filterselcter */
+function showhideFilters(){
+var filterSelecter=document.getElementById("filterSelector");
+var filtersButton=document.getElementById("filtersButton");
+
+if(filterSelecter.style.visibility=="hidden"||filterSelecter.style.visibility=="")
+{filterSelecter.style.visibility="visible";
+filtersButton.innerHTML="Back";}
+else
+{
+filterSelecter.style.visibility="hidden";
+filtersButton.innerHTML="Filters";
+}
+
+}
+
+/*show working message or hide it based on i */
+function isWorking(i){
+var message=document.getElementById("working");
+if(i==1)
+{message.style.visibility="visible";}
+else if(i==0)
+{message.style.visibility="hidden";}
+}
+
+
+//global variables 
+
+var oc,uc,over,under; // canvas and context
+var filterSelector=0; // variable for filter selection
+var imageSelected=0; // flag for image selection
+var Image1=new Image(); //image object to store image in JS
+
+/*
+_filters that we can apply, stored as an array of objects 
+the object defines data for stops and colors of a gradient 
+and blending mode
+*/
+
+_filters=[
+	      {stops:[0,1],colors:["#E53935","#C62828"],blend:"hue"},      
+		];
+
+
+// initialize the canvas 
+
+function init(){
+oc= document.getElementById("overc");
+uc= document.getElementById("underc");
+selectImageMessage=document.getElementById("selectImagepls");
+over = oc.getContext('2d');
+under = uc.getContext('2d');
+
+uc.width=Image1.width;
+uc.height=Image1.height;
+oc.width=Image1.width;
+oc.height=Image1.height;
+
+if(imageSelected==0)
+{selectImageMessage.style.visibility="visible";}
+
+if(filterSelector!=-1&&imageSelected==1)
+{
+selectImageMessage.style.visibility="hidden";
+
+var filterobj=filterMake(over,_filters[filterSelector].stops,_filters[filterSelector].colors);
+filterobj.draw(0,0,uc.width,uc.height);
+
+}
+
+under.drawImage(Image1,0,0);
+
+}
+
+/* use the filter data to create a radial gradient
+return the object that can apply the gradient to the
+given canvas context
+*/
+function filterMake(ctx,colorstops,colors)
+{
+that={};
+that.ctx=ctx;
+gradient=ctx.createRadialGradient(0,0,0,0,0,Image1.height);
+len=colorstops.length;
+for(var i=0;i<len;i++)
+{
+gradient.addColorStop(colorstops[i]/len,colors[i]);
+}
+that.gradient=gradient;
+that.draw=function(x,y,w,h){
+	that.ctx.fillStyle=that.gradient;
+	that.ctx.fillRect(x,y,w,h);
+}
+return that;
+}
+
+/*
+function to take the selecter value and create the filter 
+and then apply it on to the image , if no image has been 
+selected show a message , then use showhideFilters to hide the filter grids
+*/
+
+function apply_filter(i){
+if(imageSelected){
+filterSelector=i;
+init();
+isWorking(1);
+
+setTimeout(function(){
+
+if(filterSelector!=-1)
+{over.blendOnto(under,_filters[filterSelector].blend);}
+isWorking(0);	
+			},100);
+}
+else{alert("Please select An Image First");}
+
+showhideFilters();
+}
+
+
+/*handle input of image file*/
+
+function handleFiles(files) {
+  var file = files[0];
+  var reader = new FileReader();
+    reader.onload = (function(aImg) { return function(e) { aImg.src = e.target.result;imageSelected=1;init(); }; })(Image1);
+    reader.readAsDataURL(file);
+}
+
+/*allow user to download the image , if browser doesnt support
+download then display image in img tag
+*/
+
+function downloads()
+{
+if(imageSelected){
+isWorking(1);
+setTimeout(function(){
+var dataURL = uc.toDataURL('image/png');
+
+document.getElementById("image2download").src=dataURL;
+document.getElementById("output").style.visibility="visible";
+
+document.getElementById("mainContainer").style.visibility="hidden";
+
+  var link = document.createElement("a");
+  link.download = "download.png";
+  link.href = dataURL;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  delete link;
+isWorking(0);},100);
+}
+else{alert("Please select An Image First");}
+}
+</script>
+
+</head>
+<body>
+
+<div id="output">if your download didnt start,long press to save.Reload page to edit another image<img id="image2download" ></div>
+
+<div id="maincontainer" class="Hcenter"> 
+<div id="working">
+Working..<br>
+Please Wait.
+</div>
+<div id="hiddenelements" class="hidden">
+<input type="file" id="inputf" accept="image/*" >
+</div>
+<div id="canvasContainer">
+
+<canvas class="hidden" id="overc" ></canvas>
+<canvas class="Hcenter" id="underc" ></canvas>
+
+</div>
+<div id="selectImagepls" class="Hcenter">Please Select An Image</div>
+
+<div id="filterSelector" class="Hcenter">
+<table class="Hcenter">
+<tr>
+<td id="filter1" >filter1</td>
+<td id="filter2">filter2</td>
+<td id="filter3">filter3</td>
+</tr>
+<tr>
+<td id="filter4">filter4</td>
+<td id="filter5">filter5</td>
+<td id="filter6">filter6</td>
+</tr>
+</table>
+</div>
+
+<div id="navContainer" >
+
+<div id="filtersButton" class="button" onclick="showhideFilters();">Filters</div>
+<div id="selectImage"  class="button Hcenter">Image</div>
+<div id="DownloadImage" class="button">Download</div>
+
+</div>
+</div>
+</body>
+</html>
+
+

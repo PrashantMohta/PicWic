@@ -1,0 +1,218 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<style>
+.center {
+    margin: auto;
+    width: 90%;
+}
+body{
+font-family:Arial;
+overflow-x:hidden;
+background-color:#333;
+}
+canvas{position:absolute;left:50%;transform:translate(-50%,0);max-width:70%;max-height:70%;}
+#underc{margin:auto;}
+#downloadimage{max-width:50%;max-height:50%;}
+#canholder{margin:auto;height:100%;}
+#working{position:fixed;top:0;left:0;width:100%;height:100%;Z-index:999;text-align:center;font-size:10vw;color:#FFF;Background-color:#444;visibility:hidden;}
+#options{position:fixed;top:80%;}
+</style>
+<body onload="init();">
+<div class="center">
+<div id="working">
+Working..<br>
+Please Wait.
+</div>
+<div id="canholder">
+<canvas style="visibility:hidden;position:absolute;"id="overc" ></canvas>
+<canvas style="visibility:hidden;position:absolute;" id="under2"></canvas>
+<canvas id="underc" ></canvas>
+</div>
+<div id="options">
+<input type="file" id="input" accept="image/*" onchange="handleFiles(this.files)">
+<br/>
+
+
+<select id="filterlist" onchange="apply_filter();">
+<option value="-1">filters
+<option value="0">old love
+<option value="1">rose
+<option value="2">skin
+<option value="3">3
+<option value="4">Retro
+
+<option value="5">Movies
+<option value="6">3
+<option value="7">Vibrant
+<option value="8">Cake
+<option value="9">Blue
+<option value="10">Moss
+<option value="11">Retro2
+<option value="12">Rainforest
+<option value="13">Sunlight
+<option value="14">Beach
+<option value="15">Lemonade
+<option value="16">Coffee
+<option value="17">Retro3
+<option value="18">Kandy
+<option value="19">Grayscale
+</select>
+
+<select id="filtername" onchange="filters();">
+<option value="lighten">lighten
+<option value="hue">hue
+<option value="softlight">softlight
+<option value="overlay">overlay
+<option value="multiply">multiply
+<option value="color">color
+</select>
+<input type="button" value="Download image" onclick="downloads()">
+</div>
+<img id="downloadimage" style="visibility:hidden;">
+
+<script src="context_blender.js"></script>
+
+<script>
+
+function isWorking(i)
+{
+var message=document.getElementById("working");
+if(i==1)
+{message.style.visibility="visible";}
+else if(i==0)
+{message.style.visibility="hidden";}
+}
+
+function handleFiles(files) {
+  var file = files[0]; /* now you can work with the file list */
+  var reader = new FileReader();
+    reader.onload = (function(aImg) { return function(e) { aImg.src = e.target.result;init(); }; })(Image1);
+    reader.readAsDataURL(file);
+}
+
+function loadImage(url){
+var img= new Image();
+img.src=url;
+return img;
+}
+
+var oc= document.getElementById("overc");
+var uc= document.getElementById("underc");
+var u2= document.getElementById("under2");
+
+// Likely an 'offscreen' (not in the DOM) canvas
+var over = oc.getContext('2d');
+
+// Usually a canvas that is shown on the page
+var under = uc.getContext('2d');
+var under2 = u2.getContext('2d');
+/// draw image on uc and filter on oc
+
+var Image1= new Image();
+function filterMake(ctx,colorstops,colors)
+{
+that={};
+that.ctx=ctx;
+gradient=ctx.createRadialGradient(0,0,0,0,0,Image1.height);
+len=colorstops.length;
+for(var i=0;i<len;i++)
+{
+gradient.addColorStop(colorstops[i],colors[i]);
+}
+that.gradient=gradient;
+that.apply=function(x,y,w,h){
+	that.ctx.fillStyle=that.gradient;
+	that.ctx.fillRect(x,y,w,h);
+}
+return that;
+}
+
+
+var _filters=[
+	      {name:"retro",stops:[0],colors:["#AD1457"],blend:"lighten"},
+	      {name:"rose",stops:[0],colors:["#AD1457"],blend:"softlight"},
+	      {name:"love",stops:[0,1],colors:["#E53935","#C62828"],blend:"hue"},
+	      {name:"love",stops:[0,1],colors:["#E53935","#C62828"],blend:"softlight"},
+	      {name:"love",stops:[0],colors:["#B71C1C"],blend:"lighten"},
+	      {name:"love",stops:[0],colors:["#4A148C"],blend:"lighten"},
+	      {name:"love",stops:[0],colors:["#8E24AA"],blend:"softlight"},
+	      {name:"love",stops:[0],colors:["#8E24AA"],blend:"overlay"},
+	      {name:"love",stops:[0,1],colors:["#BA68C8","#F06292"],blend:"softlight"},
+	      {name:"love",stops:[0,1],colors:["#1976D2","#0D47A1"],blend:"overlay"},
+	      {name:"love",stops:[0],colors:["#004D40"],blend:"overlay"},
+	      {name:"love",stops:[0],colors:["#004D40"],blend:"lighten"},
+	      {name:"love",stops:[0],colors:["#33691E"],blend:"overlay"},
+	      {name:"love",stops:[0],colors:["#FFCA28"],blend:"softlight"},
+	      {name:"love",stops:[0],colors:["#FFCA28"],blend:"multiply"},
+	      {name:"love",stops:[0],colors:["#FFF176"],blend:"softlight"},
+	      {name:"love",stops:[0],colors:["#3E2723"],blend:"lighten"},
+	      {name:"love",stops:[0],colors:["#37474F"],blend:"lighten"},
+	      {name:"love",stops:[0],colors:["#3E2723"],blend:"hue"},
+	      {name:"love",stops:[0],colors:["#000000"],blend:"color"},	      
+		];
+var selecter=19;
+
+function apply_filter(){
+selecter=document.getElementById("filterlist").value;
+init();
+isWorking(1);
+// Blend all of 'over' onto 'under', starting at the upper left corner
+
+
+setTimeout(function(){
+
+if(selecter!=-1)
+{over.blendOnto(under,_filters[selecter].blend);}
+isWorking(0);			
+			},100);
+
+}
+
+function init(){
+u2.width=Image1.width;
+u2.height=Image1.height;
+uc.width=Image1.width;
+uc.height=Image1.height;
+oc.width=Image1.width;
+oc.height=Image1.height;
+
+if(selecter!=-1)
+{
+var filterobj=filterMake(over,_filters[selecter].stops,_filters[selecter].colors);
+filterobj.apply(0,0,uc.width,uc.height);
+}
+under.drawImage(Image1,0,0);
+
+}
+
+function downloads()
+{
+isWorking(1);
+setTimeout(function(){
+var dataURL = uc.toDataURL('image/png');
+
+document.getElementById("downloadimage").src=dataURL;
+document.getElementById("downloadimage").style.visibility="visible";
+
+  var link = document.createElement("a");
+  //link.download = "download.png";
+  link.href = dataURL;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  delete link;
+isWorking(0);},100);
+  //window.open(dataURL);
+  //var myWindow = window.open("", "MsgWindow");
+  //myWindow.document.write("<img src='"+dataURL+"'><br>save this ");
+}
+
+function filters(){
+init();
+isWorking(1);
+// Blend all of 'over' onto 'under', starting at the upper left corner
+setTimeout(function(){over.blendOnto(under,document.getElementById("filtername").value);isWorking(0);},100);
+
+}
+</script>
+</div>
+</body>

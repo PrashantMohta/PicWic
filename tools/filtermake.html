@@ -1,0 +1,93 @@
+<html>
+<head>
+<style>
+body{font-family:Arial;}
+textarea{font-family:inherit;}
+.title{box-shadow:0px 0px 5px #555;padding:10px 0px 0px 0px;text-align:center;margin:10px;display:block;float:left;}
+#controls{box-shadow:0px 0px 5px #555;padding:10px;margin:10px;display:block;float:left;}
+</style>
+<script>
+
+function handleFiles(files) {
+  var file = files[0]; /* now you can work with the file list */
+  var reader = new FileReader();
+    reader.onload = (function(aImg) { return function(e) { aImg.src = e.target.result;anim();}; })(Image1);
+    reader.readAsDataURL(file);
+}
+
+function addStop(){
+color=document.getElementById("colorselector").value;
+stops.push(stops.length);
+colors.push(color);
+anim();
+}
+
+var stops=[];
+var colors=[];
+
+var Image1= new Image();
+
+
+
+function anim()
+{
+var canvas=document.getElementById("preview");
+var ctx=canvas.getContext("2d");
+
+var canvas2=document.getElementById("filterpre");
+var ctx2=canvas2.getContext("2d");
+
+//var gradient=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+var gradient=ctx.createRadialGradient(0,0,0,0,0,canvas.height);
+
+for(var i=0;i<stops.length;i++)
+{
+gradient.addColorStop(stops[i]/stops.length,colors[i]);
+}
+ctx.fillStyle=gradient;
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+selecter=document.getElementById("filtername").value;
+ctx2.drawImage(Image1,0,0);
+if(selecter!="none")
+ctx.blendOnto(ctx2,selecter);
+
+document.getElementById("output").value="{stops:"+JSON.stringify(stops)+",colors:"+JSON.stringify(colors)+",blend:\""+selecter+"\"},";
+}
+</script>
+
+<script src="context_blender.js"></script>
+</head>
+<body onload="anim();">
+<div class="title">
+Filter preview<br>
+<canvas id="preview"  width="200" height="200" ></canvas>
+</div>
+<div class="title">
+Filter on image preview<br>
+<canvas id="filterpre" "  width="200" height="200" ></canvas>
+</div>
+<div id="controls">
+Controls :<br><br>
+Image :<input type="file" id="input" accept="image/*" onchange="handleFiles(this.files)">
+<br><br>
+Add Gradient color stops :<input id="colorselector" type="color" >
+<input type="button"  onclick="addStop();" value="Add Color Stop"><br>
+<br>
+Blend Mode:<br>
+<select id="filtername" onchange="anim();">
+<option value="none">none
+<option value="lighten">lighten
+<option value="hue">hue
+<option value="softlight">softlight
+<option value="overlay">overlay
+<option value="multiply">multiply
+<option value="color">color
+</select><br>
+<br>
+Output filter data<br>
+<textarea id="output" cols=70>
+</textarea>
+</div>
+</body>
+</html>
